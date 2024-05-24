@@ -1,0 +1,7 @@
+--!SubQuery
+-- //
+--*
+SELECT
+    *
+FROM
+    users;
