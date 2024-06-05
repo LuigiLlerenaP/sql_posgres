@@ -1,3 +1,12 @@
+-- -------------------------------------------------------------
+-- TablePlus 5.3.8(500)
+--
+-- https://tableplus.com/
+--
+-- Database: course-db
+-- Generation Time: 2023-07-06 12:01:11.5320
+-- -------------------------------------------------------------
+
 
 DROP TABLE IF EXISTS "public"."city";
 -- This script only contains the table creation statements and does not fully represent the table in the database. It's still missing: indices, triggers. Do not use it as a backup.
