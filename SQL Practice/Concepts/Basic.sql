@@ -98,3 +98,6 @@ DELETE FROM
 WHERE
     code = 'NLD'
     AND code2 = 'NA';
+
+--!Alterar secuencia
+ALTER SEQUENCE 'seq name' RESTART WITH 8;
