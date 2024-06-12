@@ -4,10 +4,12 @@
         "countrycode",
         "countrylanguage",
         "FIRSTNAME",
+        "isofficial",
         "LASTNAME",
         "Llerena",
         "subconsulta",
         "Subconsultas",
+        "subquery",
         "surfacearea"
     ]
 }
