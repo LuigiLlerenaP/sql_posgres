@@ -3,13 +3,17 @@
         "correlacionadas",
         "countrycode",
         "countrylanguage",
+        "CURRVAL",
         "FIRSTNAME",
         "isofficial",
         "LASTNAME",
         "Llerena",
+        "NEXTVAL",
+        "ossp",
         "subconsulta",
         "Subconsultas",
         "subquery",
-        "surfacearea"
+        "surfacearea",
+        "UUIDS"
     ]
 }
