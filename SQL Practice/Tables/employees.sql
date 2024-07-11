@@ -35,7 +35,8 @@ VALUES
     -- Reporta a 'SubGerente Ramiro'
     ('Dev Fernando', 7),
     -- Reporta a 'SubGerente Ramiro'
-    ('Dev Eduardo', 7);
+    ('Dev Eduardo', 7),
+    ('Junior Mariano', 8);
 
 SELECT
     *
