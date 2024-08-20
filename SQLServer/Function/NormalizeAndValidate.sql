@@ -1,5 +1,4 @@
-GO
-CREATE FUNCTION normalizeAndFormatText (
+CREATE FUNCTION dbo.normalizeAndFormatText (
     @OriginalValue VARCHAR(255)
 )
 RETURNS VARCHAR(255)
@@ -10,9 +9,11 @@ BEGIN
     -- Combinar validación y normalización
     SET @CleanedValue = TRIM(COALESCE(@OriginalValue, ''));
 
-    -- Reemplazar múltiples espacios internos con un solo espacio usando una expresión regular (si se desea)
-    SET @CleanedValue = REPLACE(REPLACE(@CleanedValue, CHAR(9), ' '), CHAR(10), ' '); -- opcionalmente, puedes reemplazar tabulaciones y saltos de línea
+    -- Reemplazar múltiples espacios internos con un solo espacio
+    SET @CleanedValue = REPLACE(REPLACE(@CleanedValue, CHAR(9), ' '), CHAR(10), ' ');
+    SET @CleanedValue = REPLACE(@CleanedValue, CHAR(13), ' '); -- Manejar retorno de carro
 
+    -- Reemplazo de múltiples espacios con un solo espacio
     WHILE CHARINDEX('  ', @CleanedValue) > 0
     BEGIN
         SET @CleanedValue = REPLACE(@CleanedValue, '  ', ' ');
@@ -24,14 +25,14 @@ BEGIN
         RETURN NULL;
     END;
 
-    -- Normalizar el valor
+    -- Formatear el valor: Primer carácter en mayúscula y el resto en minúscula
     RETURN UPPER(LEFT(@CleanedValue, 1)) + LOWER(SUBSTRING(@CleanedValue, 2, LEN(@CleanedValue) - 1));
 END;
 GO
 
 
 
---DROP FUNCTION dbo.normalizeAndFormatText;
+-- DROP FUNCTION dbo.normalizeAndFormatText;
 
 
 
