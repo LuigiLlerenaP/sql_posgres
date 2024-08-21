@@ -125,9 +125,20 @@ BEGIN
     END;
 
     -- Verificar si la categoría existe
-    IF NOT EXISTS (SELECT 1 FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES WHERE IDE_CATEGORY = @IDE_CATEGORY)
+    IF NOT EXISTS (SELECT 1 FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES 
+                    WHERE IDE_CATEGORY = @IDE_CATEGORY)
     BEGIN
         RAISERROR('La categoría no existe.', 16, 1);
+        RETURN;
+    END;
+
+ -- Verificar si ya existe otra categoría con el mismo nombre
+    IF EXISTS (SELECT 1 
+               FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES 
+               WHERE CATEGORY_NAME = @NormalizedCategoryName 
+                 AND IDE_CATEGORY <> @IDE_CATEGORY)
+    BEGIN
+        RAISERROR('Ya existe una categoría con el nombre ''%s''.', 16, 1, @NormalizedCategoryName);
         RETURN;
     END;
 

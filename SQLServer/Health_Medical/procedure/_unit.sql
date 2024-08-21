@@ -1,42 +1,105 @@
----//////////////////////////////////////////////////////////////////////
--- Crear procedimiento para crear una unidad
+-- ======================================= Procedimiento: sp_medication_unit ============================================= --
+-- Descripción: Inserta una nueva unidad para los medicamentos
+-- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_create_occupational_health_unit
+CREATE PROCEDURE dbo.sp_create_medication_unit
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @UNIT_NAME VARCHAR(50),
-    @ABBREVIATION VARCHAR(25)
+    @ABBREVIATION VARCHAR(25),
+    @NewUnitID UNIQUEIDENTIFIER = NULL OUTPUT
 )
 AS
 BEGIN
     SET NOCOUNT ON;
+    
+    -- Normalizar y formatear el nombre de la unidad
+    DECLARE @NormalizedUnitName VARCHAR(50);
+    SET @NormalizedUnitName = dbo.normalizeAndFormatText(@UNIT_NAME);
+
+    -- Normalizar y formatear la abreviación
+    DECLARE @NormalizedAbbreviation VARCHAR(25);
+    SET @NormalizedAbbreviation = dbo.normalizeAndFormatDownText(@ABBREVIATION);
 
     -- Validación de parámetros
-    IF @IDE_COMPANY IS NULL OR @UNIT_NAME IS NULL
+    IF @IDE_COMPANY IS NULL OR @NormalizedUnitName IS NULL OR @NormalizedAbbreviation IS NULL
     BEGIN
-        RAISERROR('Parámetros inválidos', 16, 1);
+        RAISERROR('Parámetros inválidos: la compañía, el nombre de la unidad y la abreviación son requeridos.', 16, 1);
         RETURN;
-    END
+    END;
 
     -- Verificar si la unidad ya existe
     IF EXISTS (SELECT 1 FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS 
-               WHERE IDE_COMPANY = @IDE_COMPANY AND UNIT_NAME = @UNIT_NAME)
+               WHERE IDE_COMPANY = @IDE_COMPANY AND UNIT_NAME = @NormalizedUnitName AND ABBREVIATION = @NormalizedAbbreviation)
     BEGIN
-        RAISERROR('La unidad ya existe', 16, 1);
+        RAISERROR('La unidad ''%s'' ya existe para esta compañía.', 16, 1, @NormalizedUnitName);
         RETURN;
-    END
+    END;
 
-    -- Insertar nueva unidad
-    INSERT INTO T_RRHH_OCUPATIONAL_HEALTH_UNITS (IDE_COMPANY, UNIT_NAME, ABBREVIATION)
-    VALUES (@IDE_COMPANY, @UNIT_NAME, @ABBREVIATION);
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        -- Generar un nuevo ID 
+        DECLARE @GeneratedID UNIQUEIDENTIFIER = NEWID();
 
-    PRINT 'Unidad creada exitosamente';
+        -- Insertar nueva unidad
+        INSERT INTO T_RRHH_OCUPATIONAL_HEALTH_UNITS (IDE_UNIT, IDE_COMPANY, UNIT_NAME, ABBREVIATION)
+        VALUES (@GeneratedID, @IDE_COMPANY, @NormalizedUnitName, @NormalizedAbbreviation);
+        
+        -- Confirmar la transacción
+        COMMIT TRANSACTION;
+        
+        -- Asignar el nuevo ID al parámetro de salida
+        SET @NewUnitID = @GeneratedID; 
+
+        PRINT 'Unidad creada exitosamente';
+
+    END TRY
+    BEGIN CATCH
+        -- Revertir la transacción en caso de error
+        ROLLBACK TRANSACTION;
+
+        -- Obtener detalles del error
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH;
 END;
 GO
+-- ======================================== CALL PROCEDURE ============================================== --
+------------------------------------
+GO 
+-- Declarar una variable para el id que retorna
+DECLARE @NewUnitID UNIQUEIDENTIFIER;
 
--- Actualizar unidad
+EXEC dbo.sp_create_medication_unit 
+    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
+    @UNIT_NAME =  'Test-02',
+    @ABBREVIATION = 'ABRE',
+    @NewUnitID = @NewUnitID OUTPUT ;
+
+SELECT  @NewUnitID AS NewUnit;
+------------------------------------
+EXEC dbo.sp_create_medication_unit 
+    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
+    @UNIT_NAME =  'Test-02',
+    @ABBREVIATION = 'ABRE2' ;
+-- ==================================== READ THE DOSOAGE ================================================ --
+SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS WHERE IDE_UNIT = '1bfa4032-e8f8-4e83-84ca-8214bb414257';
+-- ======================================================================================================= --
+
+-- ======================================== DROP PROCEDURE =============================================== --
+DROP PROCEDURE IF EXISTS dbo.sp_create_medication_unit;
+-- ======================================================================================================= --
+
+
+-- ==================================================================================================== --
+-- ==================================================================================================== --
+
+
+-- ======================================= Procedimiento: sp_update_medication_unit ============================================= --
+-- Descripción: Actualiza una unidad de medicamentos existente
+-- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_update_occupational_health_unit
+CREATE PROCEDURE dbo.sp_update_medication_unit
 (
     @IDE_UNIT UNIQUEIDENTIFIER,
     @UNIT_NAME VARCHAR(50),
@@ -46,32 +109,87 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    -- Normalizar y formatear el nombre de la unidad
+    DECLARE @NormalizedUnitName VARCHAR(50);
+    SET @NormalizedUnitName = dbo.normalizeAndFormatText(@UNIT_NAME);
+    
+    -- Normalizar y formatear la abreviación
+    DECLARE @NormalizedAbbreviation VARCHAR(25);
+    SET @NormalizedAbbreviation = dbo.normalizeAndFormatDownText(@ABBREVIATION);
+
     -- Validación de parámetros
-    IF @IDE_UNIT IS NULL
+    IF @IDE_UNIT IS NULL OR @NormalizedUnitName IS NULL OR @NormalizedAbbreviation IS NULL
     BEGIN
-        RAISERROR('Parámetro IDE_UNIT inválido', 16, 1);
+        RAISERROR('Parámetros inválidos. IDE_UNIT, nombre de la unidad o abreviación son requeridos.', 16, 1);
         RETURN;
-    END
+    END;
 
     -- Verificar si la unidad existe
     IF NOT EXISTS (SELECT 1 FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS WHERE IDE_UNIT = @IDE_UNIT)
     BEGIN
-        RAISERROR('La unidad no existe', 16, 1);
+        RAISERROR('La unidad especificada no existe.', 16, 1);
         RETURN;
-    END
+    END;
 
-    -- Actualizar la unidad
-    UPDATE T_RRHH_OCUPATIONAL_HEALTH_UNITS
-    SET UNIT_NAME = @UNIT_NAME, ABBREVIATION = @ABBREVIATION
-    WHERE IDE_UNIT = @IDE_UNIT;
+    -- Verificar si ya existe otra unidad con el mismo nombre y abreviación
+    IF EXISTS (SELECT 1 
+               FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS 
+               WHERE UNIT_NAME = @NormalizedUnitName 
+                 AND ABBREVIATION = @NormalizedAbbreviation
+                 AND IDE_UNIT <> @IDE_UNIT)
+    BEGIN
+        RAISERROR('Ya existe una unidad con el nombre ''%s'' y abreviación ''%s''.', 16, 1, @NormalizedUnitName, @NormalizedAbbreviation);
+        RETURN;
+    END;
 
-    PRINT 'Unidad actualizada exitosamente';
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        -- Actualizar la unidad
+        UPDATE T_RRHH_OCUPATIONAL_HEALTH_UNITS
+        SET UNIT_NAME = @NormalizedUnitName, 
+            ABBREVIATION = @NormalizedAbbreviation
+        WHERE IDE_UNIT = @IDE_UNIT;
+        
+        -- Confirmar la transacción
+        COMMIT TRANSACTION;
+
+        PRINT 'Unidad actualizada exitosamente.';
+    END TRY
+    BEGIN CATCH
+        -- Revertir la transacción en caso de error
+        ROLLBACK TRANSACTION;
+        
+        -- Obtener y mostrar el mensaje de error
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH;
 END;
 GO
 
--- Eliminar unidad
+
+
+-- ======================================== DROP PROCEDURE =============================================== --
+DROP PROCEDURE IF EXISTS dbo.sp_update_medication_unit;
+-- ======================================================================================================= --
+-- ==================================== READ THE DOSAGE ================================================ --
+SELECT * FROM  T_RRHH_OCUPATIONAL_HEALTH_UNITS WHERE IDE_UNIT = '1bfa4032-e8f8-4e83-84ca-8214bb414257';
+-- ======================================================================================================= --
+-- ======================================== CALL PROCEDURE =============================================== --
+EXEC dbo.sp_update_medication_unit 
+    @IDE_UNIT =  '1bfa4032-e8f8-4e83-84ca-8214bb414257',
+    @UNIT_NAME = 'TEST001', 
+    @ABBREVIATION = 'TEST 11.1.11';
+-- ======================================================================================================= --
+
+
+-- ==================================================================================================== --
+-- ==================================================================================================== --
+
+-- ======================================= Procedimiento: sp_delete_occupational_health_unit ============================================= --
+-- Descripción: Elimina una DOSIS de medicamentos existente
+-- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_delete_occupational_health_unit
+CREATE PROCEDURE dbo.sp_delete_medication_unit 
 (
     @IDE_UNIT UNIQUEIDENTIFIER
 )
@@ -84,34 +202,42 @@ BEGIN
     BEGIN
         RAISERROR('Parámetro IDE_UNIT inválido', 16, 1);
         RETURN;
-    END
+    END;
 
     -- Verificar si la unidad existe
     IF NOT EXISTS (SELECT 1 FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS WHERE IDE_UNIT = @IDE_UNIT)
     BEGIN
         RAISERROR('La unidad no existe', 16, 1);
         RETURN;
-    END
-
+    END;
+    BEGIN TRANSACTION;
+    BEGIN TRY
     -- Eliminar la unidad
     DELETE FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS WHERE IDE_UNIT = @IDE_UNIT;
+    -- Confirmar la transacción
+    COMMIT TRANSACTION;
 
     PRINT 'Unidad eliminada exitosamente';
+    END TRY
+    BEGIN CATCH
+      -- Revertir la transacción en caso de error
+      ROLLBACK TRANSACTION;
+      -- Obtener y mostrar el mensaje de error
+      DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+      RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH;
 END;
 GO
 
-EXEC dbo.sp_create_occupational_health_unit 
-    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
-    @UNIT_NAME = 'Test_1',
-    @ABBREVIATION = 'Test1';
+-- ======================================== DROP PROCEDURE =============================================== --
+DROP PROCEDURE IF EXISTS dbo.sp_delete_occupational_health_unit;
+-- ======================================================================================================= --
 
-EXEC dbo.sp_update_occupational_health_unit 
-    @IDE_UNIT = '4e09c593-23fb-4c88-8932-cbf0cd5bd862',
-    @UNIT_NAME = 't1',
-    @ABBREVIATION = 'g1';
+-- ======================================== CALL PROCEDURE =============================================== --
+EXEC dbo.sp_delete_medication_unit 
+    @IDE_UNIT = '480f4527-389c-493e-9688-0231b919d100';
+-- ======================================================================================================= --
 
-EXEC dbo.sp_delete_occupational_health_unit 
-    @IDE_UNIT = '4e09c593-23fb-4c88-8932-cbf0cd5bd862';
-
-
-SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS;
+-- ==================================== READ THE DOSAGE ================================================ --
+SELECT * FROM  T_RRHH_OCUPATIONAL_HEALTH_UNITS;
+-- ======================================================================================================= --

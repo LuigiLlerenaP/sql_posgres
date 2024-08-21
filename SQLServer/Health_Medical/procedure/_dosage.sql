@@ -2,7 +2,7 @@
 -- Descripción: Inserta una nueva dosis para los medicamentos
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_create_dosage
+CREATE PROCEDURE dbo.sp_create_medication_dosage
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @DOSAGE_NAME VARCHAR(50),
@@ -43,7 +43,7 @@ BEGIN
         VALUES 
             (@GeneratedID, @IDE_COMPANY, @NormalizedDosageName, @DESCRIPTION);
 
-        -- Confirmar la transacción
+         -- Confirmar la transacción
         COMMIT TRANSACTION;
 
         -- Asignar el nuevo ID al parámetro de salida
@@ -70,7 +70,7 @@ GO
 DECLARE @NewDosageID UNIQUEIDENTIFIER;
 
 -- Llamar al procedimiento almacenado
-EXEC dbo.sp_create_dosage
+EXEC dbo.sp_create_medication_dosage
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @DOSAGE_NAME = 'Test 001', 
     @DESCRIPTION = 'LUIGI TEST ;',
@@ -80,7 +80,7 @@ EXEC dbo.sp_create_dosage
 SELECT @NewDosageID AS NewDosageID;
 
 ------------------------------------
-EXEC dbo.sp_create_dosage
+EXEC dbo.sp_create_medication_dosage
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @DOSAGE_NAME = 'Test 002', 
     @DESCRIPTION = 'LUIGI TEST';
@@ -90,7 +90,7 @@ SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_DOSAGES WHERE IDE_DOSAGE = '187afb18-ce2
 -- ======================================================================================================= --
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_create_dosage;
+DROP PROCEDURE IF EXISTS dbo.sp_create_medication_dosage;
 -- ======================================================================================================= --
 
 
@@ -104,7 +104,7 @@ DROP PROCEDURE IF EXISTS dbo.sp_create_dosage;
 -- Descripción: Actualiza un dosage de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_update_dosage
+CREATE PROCEDURE dbo.sp_update_medication_dosage
 (
     @IDE_DOSAGE UNIQUEIDENTIFIER,
     @DOSAGE_NAME VARCHAR(50),
@@ -129,6 +129,16 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM T_RRHH_OCUPATIONAL_HEALTH_DOSAGES WHERE IDE_DOSAGE = @IDE_DOSAGE)
     BEGIN
         RAISERROR('La dosificación no existe', 16, 1);
+        RETURN;
+    END;
+
+    -- Verificar si ya existe otra dosificación con el mismo nombre
+    IF EXISTS (SELECT 1 
+               FROM T_RRHH_OCUPATIONAL_HEALTH_DOSAGES 
+               WHERE DOSAGE_NAME = @NormalizedName 
+                 AND IDE_DOSAGE <> @IDE_DOSAGE)
+    BEGIN
+        RAISERROR('Ya existe una dosificación con el nombre ''%s''.', 16, 1, @NormalizedName);
         RETURN;
     END;
 
@@ -157,26 +167,28 @@ BEGIN
 END;
 GO
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_update_dosage;
+DROP PROCEDURE IF EXISTS dbo.sp_update_medication_dosage;
 -- ======================================================================================================= --
 -- ==================================== READ THE DOSAGE ================================================ --
 SELECT * FROM  T_RRHH_OCUPATIONAL_HEALTH_DOSAGES WHERE IDE_DOSAGE = '187afb18-ce2d-4cb2-8d91-9423853dcdd8';
 -- ======================================================================================================= --
 -- ======================================== CALL PROCEDURE =============================================== --
-EXEC dbo.sp_update_dosage 
+EXEC dbo.sp_update_medication_dosage 
     @IDE_DOSAGE = '187afb18-ce2d-4cb2-8d91-9423853dcdd8',
     @DOSAGE_NAME = 'TEST001', 
     @DESCRIPTION = 'TEST 11.1.11';
 -- ======================================================================================================= --
 
 
+-- ==================================================================================================== --
+-- ==================================================================================================== --
 
 
 -- ======================================= Procedimiento: sp_delete_dosage ============================================= --
 -- Descripción: Elimina una DOSIS de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_delete_dosage
+CREATE PROCEDURE dbo.sp_delete_medication_dosage
 (
     @IDE_DOSAGE UNIQUEIDENTIFIER
 )
@@ -223,11 +235,11 @@ GO
 
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_delete_dosage;
+DROP PROCEDURE IF EXISTS dbo.sp_delete_medication_dosage;
 -- ======================================================================================================= --
 
-   -- ======================================== CALL PROCEDURE =============================================== --
+-- ======================================== CALL PROCEDURE =============================================== --
 
-EXEC dbo.sp_delete_dosage
+EXEC dbo.sp_delete_medication_dosage
    @IDE_DOSAGE = '187afb18-ce2d-4cb2-8d91-9423853dcdd8';
 -- ======================================================================================================= --
