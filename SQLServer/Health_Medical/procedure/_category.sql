@@ -235,4 +235,78 @@ EXEC dbo.sp_delete_medication_category
     @IDE_CATEGORY = '8ce6850b-5937-436c-b429-dfc3faeeeafc';
 
 
-SELECT * FROM  T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES;
+
+
+
+CREATE TYPE dbo.MedicationCategoryType AS TABLE
+(
+    CategoryName VARCHAR(150),
+    Description VARCHAR(255)
+);
+-- ======================================= Procedimiento:sp_insert_categories ============================================= --
+-- Descripción: 
+-- ================================================================================================================================= --
+GO
+CREATE PROCEDURE dbo.sp_insert_categories
+(
+    @IDE_COMPANY UNIQUEIDENTIFIER,
+    @Categories dbo.CategoryType READONLY
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @CategoryName VARCHAR(150), @Description VARCHAR(550);
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- Declaramos el cursor
+        DECLARE category_cursor CURSOR FOR 
+            SELECT CategoryName, Description FROM @Categories;
+
+        -- Abrimos el cursor
+        OPEN category_cursor;
+
+        -- Tomar los valores e almacenar el valor en la columna
+        FETCH NEXT FROM category_cursor INTO @CategoryName, @Description;
+
+        -- Recorre e insertar en el procedimiento almacenado
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            -- Llamar al procedimiento almacenado
+            EXEC dbo.sp_create_medication_category 
+                @IDE_COMPANY = @IDE_COMPANY, 
+                @CATEGORY_NAME = @CategoryName, 
+                @DESCRIPTION = @Description
+
+            FETCH NEXT FROM category_cursor INTO @CategoryName, @Description;
+        END;
+
+        -- Cierre y liberación del cursor
+        CLOSE category_cursor;
+        DEALLOCATE category_cursor;
+
+        COMMIT TRANSACTION;
+        
+        PRINT 'Categorias insertadas correctamente';
+    END TRY
+    BEGIN CATCH
+        -- Manejo de errores
+        IF CURSOR_STATUS('global', 'category_cursor') >= -1
+        BEGIN
+            CLOSE category_cursor;
+            DEALLOCATE category_cursor;
+        END
+
+        -- Revertir la transacción en caso de error
+        ROLLBACK TRANSACTION;
+
+        -- Obtener y mostrar el mensaje de error
+        DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+        RAISERROR (@ErrorMessage, ERROR_SEVERITY(), ERROR_STATE());
+    END CATCH
+END;
+GO
+
+
