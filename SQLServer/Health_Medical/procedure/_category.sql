@@ -170,15 +170,15 @@ DROP PROCEDURE IF EXISTS dbo.sp_update_medication_category;
 -- ==================================== READ THE CATEGORY ================================================ --
 SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES WHERE IDE_CATEGORY = 'FE324EDE-CB70-45DD-AA67-92320796875B';
 -- ======================================================================================================= --
+-- ======================================== CALL PROCEDURE ============================================== --
 
-
----DROP PROCEDURE dbo.sp_update_medication_category;
+------------------------------------
 
 EXEC dbo.sp_update_medication_category 
     @IDE_CATEGORY = 'FE324EDE-CB70-45DD-AA67-92320796875B',
     @CATEGORY_NAME = 'TEST009', 
     @DESCRIPTION = 'TEST 11.1.1';
-
+-- ======================================================================================================= --
 
 
 -- ======================================= Procedimiento: sp_delete_medication_category ============================================= --
@@ -240,71 +240,83 @@ EXEC dbo.sp_delete_medication_category
 
 
 -- ======================================= Procedimiento:sp_insert_categories ============================================= --
--- Descripción: 
+-- Descripción: -- Procedimiento para insertar categorías en batch
 -- ================================================================================================================================= --
 CREATE TYPE dbo.MedicationCategoryType AS TABLE
 (
     CategoryName VARCHAR(150),
     Description VARCHAR(255)
 );
+GO
 
 GO
-CREATE PROCEDURE dbo.sp_insert_categories
+CREATE OR ALTER PROCEDURE dbo.sp_insert_categories
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
-    @Categories dbo.CategoryType READONLY
+    @Categories dbo.MedicationCategoryType READONLY
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @CategoryName VARCHAR(150), @Description VARCHAR(550);
-
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Declaramos el cursor
-        DECLARE category_cursor CURSOR FOR 
-            SELECT CategoryName, Description FROM @Categories;
-
-        -- Abrimos el cursor
-        OPEN category_cursor;
-
-        -- Tomar los valores e almacenar el valor en la columna
-        FETCH NEXT FROM category_cursor INTO @CategoryName, @Description;
-
-        -- Recorre e insertar en el procedimiento almacenado
-        WHILE @@FETCH_STATUS = 0
-        BEGIN
-            -- Llamar al procedimiento almacenado
-            EXEC dbo.sp_create_medication_category 
-                @IDE_COMPANY = @IDE_COMPANY, 
-                @CATEGORY_NAME = @CategoryName, 
-                @DESCRIPTION = @Description
-
-            FETCH NEXT FROM category_cursor INTO @CategoryName, @Description;
-        END;
-
-        -- Cierre y liberación del cursor
-        CLOSE category_cursor;
-        DEALLOCATE category_cursor;
+        -- Insertar todas las categorías en una sola operación
+        INSERT INTO T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES
+        (IDE_COMPANY, CATEGORY_NAME, DESCRIPTION)
+        SELECT 
+              @IDE_COMPANY, 
+              dbo.normalizeAndFormatText(CategoryName) AS CategoryName,
+              Description
+        FROM @Categories 
+        WHERE dbo.normalizeAndFormatText(CategoryName) IS NOT NULL 
+          AND LTRIM(RTRIM(dbo.normalizeAndFormatText(CategoryName))) <> '' 
+          AND Description IS NOT NULL;
 
         COMMIT TRANSACTION;
         
         PRINT 'Categorias insertadas correctamente';
     END TRY
     BEGIN CATCH
-        -- Manejo de errores
-        IF CURSOR_STATUS('global', 'category_cursor') >= -1
-        BEGIN
-            CLOSE category_cursor;
-            DEALLOCATE category_cursor;
-        END
         ROLLBACK TRANSACTION;
-        DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
-        RAISERROR (@ErrorMessage, ERROR_SEVERITY(), ERROR_STATE());
-    END CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH;
 END;
 GO
 
+-- ======================================== DROP PROCEDURE =============================================== --
+DROP PROCEDURE IF EXISTS dbo.sp_insert_categories;
+DROP TYPE IF EXISTS dbo.MedicationCategoryType;
+GO
+
+-- ======================================================================================================= --
+
+-- ======================================== CALL PROCEDURE ============================================== --
+
+-----------------------------------
+GO
+-- Declarar la tabla de tipo de datos
+DECLARE @Categories dbo.MedicationCategoryType;
+
+-- Insertar datos de prueba en la tabla de tipo
+INSERT INTO @Categories (CategoryName, Description)
+VALUES 
+    ('Test Category 00001', 'Description for Test Category 00001'),
+    ('Test Category 00002', 'Description for Test Category 00002'),
+    ('Test Category 00003', 'Description for Test Category 00003'),
+    ('Test Category 00004', 'Description for Test Category 00004'),
+    ('Test Category 00005', 'Description for Test Category 00005');
+GO
+
+-- 3. Ejecutar el procedimiento almacenado con los datos de prueba
+EXEC dbo.sp_insert_categories
+    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16',
+    @Categories = @Categories;
+GO
+
+-- 4. Verificar los datos insertados
+SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES;
+GO
 
