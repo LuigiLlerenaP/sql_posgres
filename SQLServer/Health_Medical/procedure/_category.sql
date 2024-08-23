@@ -238,14 +238,16 @@ EXEC dbo.sp_delete_medication_category
 
 
 
+
+-- ======================================= Procedimiento:sp_insert_categories ============================================= --
+-- Descripción: 
+-- ================================================================================================================================= --
 CREATE TYPE dbo.MedicationCategoryType AS TABLE
 (
     CategoryName VARCHAR(150),
     Description VARCHAR(255)
 );
--- ======================================= Procedimiento:sp_insert_categories ============================================= --
--- Descripción: 
--- ================================================================================================================================= --
+
 GO
 CREATE PROCEDURE dbo.sp_insert_categories
 (
@@ -298,11 +300,7 @@ BEGIN
             CLOSE category_cursor;
             DEALLOCATE category_cursor;
         END
-
-        -- Revertir la transacción en caso de error
         ROLLBACK TRANSACTION;
-
-        -- Obtener y mostrar el mensaje de error
         DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
         RAISERROR (@ErrorMessage, ERROR_SEVERITY(), ERROR_STATE());
     END CATCH

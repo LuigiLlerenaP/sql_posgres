@@ -1,178 +1,82 @@
--- ==================================================================================================== --
--- ==================================================================================================== --
+-- ======================================================================================================= --
+-- ======================================================================================================= --
 
--- ======================================= Procedimiento:Tablas de tipos de Datos  ============================================= --
--- Descripción: Se crearan los tipos de tablas que seran utilizados como parametros en el procedimiento almacenado
--- ================================================================================================================================= --
-
-CREATE TYPE dbo.MedicationUnitType AS TABLE
-(
-    UnitName VARCHAR(50),
-    Abbreviation VARCHAR(25)
-);
-
-CREATE TYPE dbo.MedicationDosageType AS TABLE
-(
-    DosageName VARCHAR(50),
-    Description VARCHAR(255)
-);
-
-CREATE TYPE dbo.MedicationManufacturerType AS TABLE
-(
-    ManufacturerName VARCHAR(50)
-);
-
-CREATE TYPE dbo.MedicationPresentationType AS TABLE
-(
-    PresentationName VARCHAR(50),
-    Description VARCHAR(255)
-);
-
-CREATE TYPE dbo.MedicationRouteType AS TABLE
-(
-    RouteName VARCHAR(50)
-);
-
--- ==================================================================================================== --
--- ==================================================================================================== --
-
-
-
--- ======================================= Procedimiento: sp_create_medication ============================================= --
--- Descripción: Insertar un mediamento pasando los mobres de las tablas fk
+-- ======================================= Procedimiento: sp_insert_medication ============================================= --
+-- Descripción: Inserta un nuevo medicamento , validando los campos 
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_create_medication 
+CREATE PROCEDURE dbo.sp_insert_medication
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @MEDICATION_NAME VARCHAR(200),
-    @CATEGORY_NAME NVARCHAR(150),
-    @UNIT_NAME NVARCHAR(150),
-    @DOSAGE_NAME NVARCHAR(150),
-    @MANUFACTURER_NAME NVARCHAR(150),
-    @PRESENTATION_NAME NVARCHAR(150),
-    @ROUTE_NAME NVARCHAR(150),
+    @IDE_CATEGORY UNIQUEIDENTIFIER,
+    @IDE_UNIT UNIQUEIDENTIFIER,
+    @IDE_DOSAGE UNIQUEIDENTIFIER,
+    @IDE_MANUFACTURER UNIQUEIDENTIFIER,
+    @IDE_PRESENTATION UNIQUEIDENTIFIER,
+    @IDE_ROUTE UNIQUEIDENTIFIER,
     @NewMedicationID UNIQUEIDENTIFIER = NULL OUTPUT
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Normalizar el nombre del medicamento y otros campos
+    -- Normalizar el nombre del medicamento
     SET @MEDICATION_NAME = dbo.normalizeAndFormatText(@MEDICATION_NAME);
-    SET @CATEGORY_NAME = dbo.normalizeAndFormatText(@CATEGORY_NAME);
-    SET @UNIT_NAME = dbo.normalizeAndFormatText(@UNIT_NAME);
-    SET @DOSAGE_NAME = dbo.normalizeAndFormatText(@DOSAGE_NAME);
-    SET @MANUFACTURER_NAME = dbo.normalizeAndFormatText(@MANUFACTURER_NAME);
-    SET @PRESENTATION_NAME = dbo.normalizeAndFormatText(@PRESENTATION_NAME);
-    SET @ROUTE_NAME = dbo.normalizeAndFormatText(@ROUTE_NAME);
 
     -- Validar si los campos son NULL
     IF @IDE_COMPANY IS NULL OR
        @MEDICATION_NAME IS NULL OR 
-       @CATEGORY_NAME IS NULL OR 
-       @UNIT_NAME IS NULL OR 
-       @DOSAGE_NAME IS NULL OR 
-       @MANUFACTURER_NAME IS NULL OR  
-       @PRESENTATION_NAME IS NULL OR
-       @ROUTE_NAME IS NULL 
+       @IDE_CATEGORY IS NULL OR 
+       @IDE_UNIT IS NULL OR 
+       @IDE_DOSAGE IS NULL OR 
+       @IDE_MANUFACTURER IS NULL OR  
+       @IDE_PRESENTATION IS NULL OR
+       @IDE_ROUTE IS NULL 
     BEGIN
         RAISERROR('Los parámetros no pueden ser NULL.', 16, 1);
         RETURN;
     END;
 
-    IF EXISTS (SELECT 1 FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATIONS WHERE MEDICATION_NAME = @MEDICATION_NAME)
+    -- Llamar a la función de validación
+    DECLARE @ErrorMsg NVARCHAR(4000);
+    SET @ErrorMsg = dbo.fn_validate_medication(
+        @MEDICATION_NAME, 
+        @IDE_CATEGORY, 
+        @IDE_UNIT, 
+        @IDE_DOSAGE, 
+        @IDE_MANUFACTURER, 
+        @IDE_PRESENTATION, 
+        @IDE_ROUTE,
+        NULL 
+    );
+
+    -- Si hay un error, lanzarlo
+    IF @ErrorMsg IS NOT NULL
     BEGIN
-        RAISERROR('El medicamento con el nombre proporcionado ya existe.', 16, 1);
-        RETURN;
-    END;
-
-
-    DECLARE @NewCategoryID UNIQUEIDENTIFIER;
-    SELECT @NewCategoryID = IDE_CATEGORY
-    FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES
-    WHERE CATEGORY_NAME = @CATEGORY_NAME AND IDE_COMPANY = @IDE_COMPANY;
-
-    IF @NewCategoryID IS NULL 
-    BEGIN
-        RAISERROR('No existe esa categoría.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewUnitID UNIQUEIDENTIFIER;
-    SELECT @NewUnitID = IDE_UNIT
-    FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS 
-    WHERE IDE_COMPANY = @IDE_COMPANY AND UNIT_NAME = @UNIT_NAME;
-
-    IF @NewUnitID IS NULL 
-    BEGIN
-        RAISERROR('No existe esa unidad.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewDosageID UNIQUEIDENTIFIER;
-    SELECT @NewDosageID = IDE_DOSAGE
-    FROM T_RRHH_OCUPATIONAL_HEALTH_DOSAGES 
-    WHERE IDE_COMPANY = @IDE_COMPANY AND DOSAGE_NAME = @DOSAGE_NAME;
-
-    IF @NewDosageID IS NULL 
-    BEGIN
-        RAISERROR('No existe esa dosis.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewManufacturerID UNIQUEIDENTIFIER;
-    SELECT @NewManufacturerID = IDE_MANUFACTURER
-    FROM T_RRHH_OCUPATIONAL_HEALTH_MANUFACTURERS 
-    WHERE IDE_COMPANY = @IDE_COMPANY AND MANUFACTURER_NAME = @MANUFACTURER_NAME;
-
-    IF @NewManufacturerID IS NULL 
-    BEGIN
-        RAISERROR('No existe ese fabricante.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewPresentationID UNIQUEIDENTIFIER;
-    SELECT @NewPresentationID = IDE_PRESENTATION 
-    FROM T_RRHH_OCUPATIONAL_HEALTH_PRESENTATIONS 
-    WHERE IDE_COMPANY = @IDE_COMPANY AND PRESENTATION_NAME = @PRESENTATION_NAME;
-
-    IF @NewPresentationID IS NULL 
-    BEGIN
-        RAISERROR('No existe esa presentación.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewRouteID UNIQUEIDENTIFIER;
-    SELECT @NewRouteID = IDE_ROUTE 
-    FROM T_RRHH_OCUPATIONAL_HEALTH_ADMINISTRATION_ROUTES  
-    WHERE IDE_COMPANY = @IDE_COMPANY AND ROUTE_NAME = @ROUTE_NAME;
-
-    IF @NewRouteID IS NULL 
-    BEGIN
-        RAISERROR('No existe esa ruta.', 16, 1);
+        RAISERROR(@ErrorMsg, 16, 1);
         RETURN;
     END;
 
     -- Iniciar la transacción
     BEGIN TRANSACTION;
     BEGIN TRY
-        -- Generar un nuevo ID y realizar la inserción
         DECLARE @GeneratedID UNIQUEIDENTIFIER = NEWID();
 
+        -- Insertar un nuevo medicamento
         INSERT INTO T_RRHH_OCUPATIONAL_HEALTH_MEDICATIONS
         (IDE_MEDICATION, IDE_COMPANY, IDE_CATEGORY, IDE_UNIT, IDE_DOSAGE, IDE_MANUFACTURER, IDE_PRESENTATION, IDE_ROUTE, MEDICATION_NAME)
         VALUES
-        (@GeneratedID, @IDE_COMPANY, @NewCategoryID, @NewUnitID, @NewDosageID, @NewManufacturerID, @NewPresentationID, @NewRouteID, @MEDICATION_NAME);
-
-        -- Confirmar la transacción
-        COMMIT TRANSACTION;
+        (@GeneratedID, @IDE_COMPANY, @IDE_CATEGORY, @IDE_UNIT, @IDE_DOSAGE, @IDE_MANUFACTURER, @IDE_PRESENTATION, @IDE_ROUTE, @MEDICATION_NAME);
 
         -- Asignar el ID del nuevo medicamento a la variable de salida
         SET @NewMedicationID = @GeneratedID;
 
         PRINT 'Medicamento creado exitosamente.';
 
+        -- Confirmar la transacción
+        COMMIT TRANSACTION;
+
     END TRY
     BEGIN CATCH
         -- Revertir la transacción en caso de error
@@ -181,164 +85,143 @@ BEGIN
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH;
-
 END;
 GO
-
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_create_medication;
+DROP PROCEDURE IF EXISTS dbo.sp_insert_medication;
 -- ======================================================================================================= --
-
 -- ======================================== CALL PROCEDURE ============================================== --
-
 ------------------------------------
 GO
 DECLARE @NewMedicationID UNIQUEIDENTIFIER;
 
-EXEC dbo.sp_create_medication
-    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
-    @MEDICATION_NAME = 'Dimethyltryptamine',
-    @CATEGORY_NAME = 'Psychedelic',
-    @UNIT_NAME = 'Vial',
-    @DOSAGE_NAME = '10mg/mL',
-    @MANUFACTURER_NAME = 'Mystical Labs',
-    @PRESENTATION_NAME = 'Ampoule',
-    @ROUTE_NAME = 'Intramuscular',
+EXEC dbo.sp_insert_medication
+    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16',
+    @MEDICATION_NAME = 'Luigi    lll',
+    @IDE_CATEGORY = '8a5a1e7d-4aa1-4f46-868a-2115585cc357',
+    @IDE_UNIT = '5b552a74-913b-4a66-b2e2-2903d1eb039d',
+    @IDE_DOSAGE = '4cd3c861-603c-489c-abf2-f43cfdf19a2f',
+    @IDE_MANUFACTURER = '6449fa0d-0d3f-4550-8095-119cf7b92cf4',
+    @IDE_PRESENTATION = '5f86c016-2455-47a6-8b6d-68f1c11a84ad',
+    @IDE_ROUTE = '8b1a6841-fdbc-482e-bb1a-e70c092888b9',
     @NewMedicationID = @NewMedicationID OUTPUT;
 
--- Verifica el valor del ID del nuevo medicamento creado
-SELECT @NewMedicationID AS NewMedicationID;
+SELECT @NewMedicationID AS MedicationID;
 
-
--- ==================================== READ THE PRESENTATION ================================================ --
-SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATIONS  where IDE_MEDICATION ='35928c13-5dd5-4ab5-88e7-f60fb8b1e24f';
+------------------------------------
+EXEC dbo.sp_insert_medication
+    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16',
+    @MEDICATION_NAME = 'Luigi 02',
+    @IDE_CATEGORY = '8a5a1e7d-4aa1-4f46-868a-2115585cc357',
+    @IDE_UNIT = '5b552a74-913b-4a66-b2e2-2903d1eb039d',
+    @IDE_DOSAGE = '4cd3c861-603c-489c-abf2-f43cfdf19a2f',
+    @IDE_MANUFACTURER = '6449fa0d-0d3f-4550-8095-119cf7b92cf4',
+    @IDE_PRESENTATION = '5f86c016-2455-47a6-8b6d-68f1c11a84ad',
+    @IDE_ROUTE = '8b1a6841-fdbc-482e-bb1a-e70c092888b9';
+-- ======================================================================================================= --
+-- ======================================== Read Table==================================================== --
+SELECT * 
+FROM   vw_medication_details 
+WHERE  [Medication_ID] = '4f2f569c-01e0-4e2b-b98b-f4f18a3d9af4';
 -- ======================================================================================================= --
 
--- ==================================================================================================== --
--- ==================================================================================================== --
+-- ======================================================================================================= --
+-- ======================================================================================================= --
 
--- ======================================= Procedimiento: sp_update_presentation ============================================= --
--- Descripción: Actualiza una presentación de medicamentos existente
+
+
+
+-- ======================================= Procedimiento: sp_update_medication ============================================= --
+-- DescripcióN : Actualizar el medicamento existente 
 -- ================================================================================================================================= --
 GO
 CREATE PROCEDURE dbo.sp_update_medication
 (
-    @IDE_MEDICATION UNIQUEIDENTIFIER,      -- Identificador del medicamento a actualizar
-    @IDE_COMPANY UNIQUEIDENTIFIER,         -- Identificador de la compañía
-    @MEDICATION_NAME VARCHAR(200),         -- Nombre del medicamento
-    @CATEGORY_NAME NVARCHAR(150),          -- Nombre de la categoría
-    @UNIT_NAME NVARCHAR(150),              -- Nombre de la unidad
-    @DOSAGE_NAME NVARCHAR(150),            -- Nombre de la dosis
-    @MANUFACTURER_NAME NVARCHAR(150),      -- Nombre del fabricante
-    @PRESENTATION_NAME NVARCHAR(150),      -- Nombre de la presentación
-    @ROUTE_NAME NVARCHAR(150)              -- Nombre de la ruta
+    @IDE_MEDICATION UNIQUEIDENTIFIER, 
+    @IDE_COMPANY UNIQUEIDENTIFIER,
+    @MEDICATION_NAME VARCHAR(200),
+    @IDE_CATEGORY UNIQUEIDENTIFIER,
+    @IDE_UNIT UNIQUEIDENTIFIER,
+    @IDE_DOSAGE UNIQUEIDENTIFIER,
+    @IDE_MANUFACTURER UNIQUEIDENTIFIER,
+    @IDE_PRESENTATION UNIQUEIDENTIFIER,
+    @IDE_ROUTE UNIQUEIDENTIFIER,
+    @STATUS NVARCHAR(255)
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Validar si el medicamento existe
+    -- Validar si el medicamento a actualizar existe
     IF NOT EXISTS (SELECT 1 FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATIONS WHERE IDE_MEDICATION = @IDE_MEDICATION)
     BEGIN
         RAISERROR('El medicamento con el ID proporcionado no existe.', 16, 1);
         RETURN;
     END;
+        
+    IF @STATUS NOT IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'DISCONTINUED')
+    BEGIN
+        RAISERROR('El valor de STATUS no es válido. Debe ser uno de los siguientes: ACTIVE, INACTIVE, SUSPENDED, DISCONTINUED.', 16, 1);
+        RETURN;
+    END
 
-    -- Normalizar los valores
+    -- Normalizar el nombre del medicamento
     SET @MEDICATION_NAME = dbo.normalizeAndFormatText(@MEDICATION_NAME);
-    SET @CATEGORY_NAME = dbo.normalizeAndFormatText(@CATEGORY_NAME);
-    SET @UNIT_NAME = dbo.normalizeAndFormatText(@UNIT_NAME);
-    SET @DOSAGE_NAME = dbo.normalizeAndFormatText(@DOSAGE_NAME);
-    SET @MANUFACTURER_NAME = dbo.normalizeAndFormatText(@MANUFACTURER_NAME);
-    SET @PRESENTATION_NAME = dbo.normalizeAndFormatText(@PRESENTATION_NAME);
-    SET @ROUTE_NAME = dbo.normalizeAndFormatText(@ROUTE_NAME);
 
-    DECLARE @NewCategoryID UNIQUEIDENTIFIER;
-    SELECT @NewCategoryID = IDE_CATEGORY
-    FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES
-    WHERE CATEGORY_NAME = @CATEGORY_NAME AND IDE_COMPANY = @IDE_COMPANY;
-
-    IF @NewCategoryID IS NULL 
+    -- Validar si los campos son NULL
+    IF @IDE_COMPANY IS NULL OR
+       @MEDICATION_NAME IS NULL OR 
+       @IDE_CATEGORY IS NULL OR 
+       @IDE_UNIT IS NULL OR 
+       @IDE_DOSAGE IS NULL OR 
+       @IDE_MANUFACTURER IS NULL OR  
+       @IDE_PRESENTATION IS NULL OR
+       @IDE_ROUTE IS NULL 
     BEGIN
-        RAISERROR('No existe esa categoría.', 16, 1);
+        RAISERROR('Los parámetros no pueden ser NULL.', 16, 1);
         RETURN;
     END;
 
-    DECLARE @NewUnitID UNIQUEIDENTIFIER;
-    SELECT @NewUnitID = IDE_UNIT
-    FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS 
-    WHERE IDE_COMPANY = @IDE_COMPANY AND UNIT_NAME = @UNIT_NAME;
+    -- Llamar a la función de validación
+    DECLARE @ErrorMsg NVARCHAR(4000);
+    SET @ErrorMsg = dbo.fn_validate_medication(
+        @MEDICATION_NAME, 
+        @IDE_CATEGORY, 
+        @IDE_UNIT, 
+        @IDE_DOSAGE, 
+        @IDE_MANUFACTURER, 
+        @IDE_PRESENTATION, 
+        @IDE_ROUTE,
+        @IDE_MEDICATION -- Pasar el ID del medicamento para la validación
+    );
 
-    IF @NewUnitID IS NULL 
+    -- Si hay un error, lanzarlo
+    IF @ErrorMsg IS NOT NULL
     BEGIN
-        RAISERROR('No existe esa unidad.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewDosageID UNIQUEIDENTIFIER;
-    SELECT @NewDosageID = IDE_DOSAGE
-    FROM T_RRHH_OCUPATIONAL_HEALTH_DOSAGES 
-    WHERE IDE_COMPANY = @IDE_COMPANY AND DOSAGE_NAME = @DOSAGE_NAME;
-
-    IF @NewDosageID IS NULL 
-    BEGIN
-        RAISERROR('No existe esa dosis.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewManufacturerID UNIQUEIDENTIFIER;
-    SELECT @NewManufacturerID = IDE_MANUFACTURER
-    FROM T_RRHH_OCUPATIONAL_HEALTH_MANUFACTURERS 
-    WHERE IDE_COMPANY = @IDE_COMPANY AND MANUFACTURER_NAME = @MANUFACTURER_NAME;
-
-    IF @NewManufacturerID IS NULL 
-    BEGIN
-        RAISERROR('No existe ese fabricante.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewPresentationID UNIQUEIDENTIFIER;
-    SELECT @NewPresentationID = IDE_PRESENTATION 
-    FROM T_RRHH_OCUPATIONAL_HEALTH_PRESENTATIONS 
-    WHERE IDE_COMPANY = @IDE_COMPANY AND PRESENTATION_NAME = @PRESENTATION_NAME;
-
-    IF @NewPresentationID IS NULL 
-    BEGIN
-        RAISERROR('No existe esa presentación.', 16, 1);
-        RETURN;
-    END;
-
-    DECLARE @NewRouteID UNIQUEIDENTIFIER;
-    SELECT @NewRouteID = IDE_ROUTE 
-    FROM T_RRHH_OCUPATIONAL_HEALTH_ADMINISTRATION_ROUTES  
-    WHERE IDE_COMPANY = @IDE_COMPANY AND ROUTE_NAME = @ROUTE_NAME;
-
-    IF @NewRouteID IS NULL 
-    BEGIN
-        RAISERROR('No existe esa ruta.', 16, 1);
+        RAISERROR(@ErrorMsg, 16, 1);
         RETURN;
     END;
 
     -- Iniciar la transacción
     BEGIN TRANSACTION;
     BEGIN TRY
-        -- Actualizar el registro del medicamento
+        -- Actualizar el medicamento existente
         UPDATE T_RRHH_OCUPATIONAL_HEALTH_MEDICATIONS
-        SET
-            IDE_COMPANY = @IDE_COMPANY,
-            IDE_CATEGORY = @NewCategoryID,
-            IDE_UNIT = @NewUnitID,
-            IDE_DOSAGE = @NewDosageID,
-            IDE_MANUFACTURER = @NewManufacturerID,
-            IDE_PRESENTATION = @NewPresentationID,
-            IDE_ROUTE = @NewRouteID,
-            MEDICATION_NAME = @MEDICATION_NAME
+        SET IDE_COMPANY = @IDE_COMPANY,
+            IDE_CATEGORY = @IDE_CATEGORY,
+            IDE_UNIT = @IDE_UNIT,
+            IDE_DOSAGE = @IDE_DOSAGE,
+            IDE_MANUFACTURER = @IDE_MANUFACTURER,
+            IDE_PRESENTATION = @IDE_PRESENTATION,
+            IDE_ROUTE = @IDE_ROUTE,
+            MEDICATION_NAME = @MEDICATION_NAME ,
+            STATUS = @STATUS
         WHERE IDE_MEDICATION = @IDE_MEDICATION;
+
+        PRINT 'Medicamento actualizado exitosamente.';
 
         -- Confirmar la transacción
         COMMIT TRANSACTION;
-
-        PRINT 'Medicamento actualizado exitosamente.';
 
     END TRY
     BEGIN CATCH
@@ -348,35 +231,39 @@ BEGIN
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH;
-
 END;
 GO
-
+-- ======================================== DROP PROCEDURE =============================================== --
+DROP PROCEDURE IF EXISTS dbo.sp_update_medication;
+-- ======================================================================================================= --
 -- ======================================== CALL PROCEDURE ============================================== --
 ------------------------------------
 EXEC dbo.sp_update_medication
-    @IDE_MEDICATION = '35928c13-5dd5-4ab5-88e7-f60fb8b1e24f',  -- ID del medicamento a actualizar
-    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16',   -- ID de la compañía
-    @MEDICATION_NAME = 'Dimethyltryptamine_Test',                   -- Nuevo nombre del medicamento
-    @CATEGORY_NAME = 'Psychedelic',                            -- Nombre de la nueva categoría
-    @UNIT_NAME = 'Vial',                                      -- Nombre de la nueva unidad
-    @DOSAGE_NAME = '10mg/mL',                                 -- Nuevo nombre de la dosis
-    @MANUFACTURER_NAME = 'Mystical Labs',                     -- Nombre del nuevo fabricante
-    @PRESENTATION_NAME = 'Ampoule',                           -- Nombre de la nueva presentación
-    @ROUTE_NAME = 'Intramuscular';        
+   @IDE_MEDICATION = 'a92e76e7-66fe-4988-a70b-cb417d8e4d9c',
+    @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16',
+    @MEDICATION_NAME = ' Test 002',
+    @IDE_CATEGORY = '8a5a1e7d-4aa1-4f46-868a-2115585cc357',
+    @IDE_UNIT = '5b552a74-913b-4a66-b2e2-2903d1eb039d',
+    @IDE_DOSAGE = '4cd3c861-603c-489c-abf2-f43cfdf19a2f',
+    @IDE_MANUFACTURER = '6449fa0d-0d3f-4550-8095-119cf7b92cf4',
+    @IDE_PRESENTATION = '5f86c016-2455-47a6-8b6d-68f1c11a84ad',
+    @IDE_ROUTE = '8b1a6841-fdbc-482e-bb1a-e70c092888b9',
+    @STATUS = 'ACTIVE';
+-- ==================================================================================================== --
+-- ======================================== Read Table==================================================== --
+SELECT * 
+FROM   vw_medication_details 
+WHERE  [Medication_ID] = '4f2f569c-01e0-4e2b-b98b-f4f18a3d9af4';
+-- ======================================================================================================= --
 
--- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_update_medication;
--- ======================================================================================================= -
 
 
+-- ==================================================================================================== --
+-- ==================================================================================================== --
 
-
-
-
--- ======================================= Procedimiento: sp_delete_medication_route ============================================= --
--- Descripción: Elimina una ruta de administración de medicamentos existente
--- ================================================================================================================================= --
+-- ================= Procedimiento: sp_delete_medication =========================
+-- Descripción: Elimina un medicamento existente
+-- ==========================================
 GO
 CREATE PROCEDURE dbo.sp_delete_medication
 (
@@ -416,7 +303,14 @@ BEGIN
 
 END;
 GO
-
-
+-- ======================================== DROP PROCEDURE =============================================== --
+DROP PROCEDURE IF EXISTS dbo.sp_delete_medication;
+-- ======================================================================================================= --
+-- ======================================== Call Procedure =============================================== --
+------------------------------------
 EXEC dbo.sp_delete_medication 
     @IDE_MEDICATION = '35928c13-5dd5-4ab5-88e7-f60fb8b1e24f';
+-- ======================================================================================================= --
+-- ======================================== Read Table==================================================== --
+SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATIONS
+-- ======================================================================================================= --
