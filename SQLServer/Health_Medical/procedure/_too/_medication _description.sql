@@ -5,7 +5,7 @@
 -- Descripción: Inserta un nuevo medicamento , validando los campos 
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_add_medication_information
+CREATE PROCEDURE dbo.sp_add_medication_information_health
 (
     @IDE_MEDICATION UNIQUEIDENTIFIER,
     @MAX_DOSAGE NUMERIC(10, 2),
@@ -104,7 +104,7 @@ END;
 GO
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_add_medication_information;
+DROP PROCEDURE IF EXISTS dbo.sp_add_medication_information_health;
 -- ======================================================================================================= --
 
 -- ======================================== CALL PROCEDURE ============================================== --
@@ -112,7 +112,7 @@ DROP PROCEDURE IF EXISTS dbo.sp_add_medication_information;
 GO
 DECLARE @NewMedicationDetailsID UNIQUEIDENTIFIER;
 
-EXEC dbo.sp_add_medication_information
+EXEC dbo.sp_add_medication_information_health
     @IDE_MEDICATION = '4f2f569c-01e0-4e2b-b98b-f4f18a3d9af4',
     @MAX_DOSAGE = 500.00,
     @INDICATIONS_RECOMMENDATION = 'Recomendación para el medicamento.',
@@ -125,7 +125,7 @@ EXEC dbo.sp_add_medication_information
 SELECT @NewMedicationDetailsID AS ID;
 
 ------------------------------------
-EXEC dbo.sp_add_medication_information
+EXEC dbo.sp_add_medication_information_health
     @IDE_MEDICATION = '',
     @MAX_DOSAGE = 9.00,
     @INDICATIONS_RECOMMENDATION = 'Recomendación para el medicamento.',
@@ -151,7 +151,7 @@ SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_DETAILS;
 -- DescripcióN :
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_update_medication_information
+CREATE PROCEDURE dbo.sp_update_medication_information_health
 (
     @IDE_MEDICATION_DETAIL UNIQUEIDENTIFIER,
     @MAX_DOSAGE NUMERIC(10, 2),
@@ -223,12 +223,12 @@ BEGIN
 END;
 GO
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_update_medication_information;
+DROP PROCEDURE IF EXISTS dbo.sp_update_medication_information_health;
 -- ======================================================================================================= --
 
 -- ======================================== CALL PROCEDURE ============================================== --
 ------------------------------------
-EXEC dbo.sp_update_medication_information 
+EXEC dbo.sp_update_medication_information_health 
     @IDE_MEDICATION_DETAIL = '5654ed9e-ddaf-4c31-aebe-1f419a06dfab',
     @MAX_DOSAGE = 900.00, 
     @INDICATIONS_RECOMMENDATION = 'Tomar con alimentos para evitar irritación gástrica.',
@@ -247,7 +247,7 @@ EXEC dbo.sp_update_medication_information
 -- Descripción: Elimina un medicamento existente
 -- ====================================================================================
 GO
-CREATE PROCEDURE dbo.sp_delete_medication_information 
+CREATE PROCEDURE dbo.sp_delete_medication_information_health
 (
     @IDE_MEDICATION_DETAIL UNIQUEIDENTIFIER 
 )

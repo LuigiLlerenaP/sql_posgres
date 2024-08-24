@@ -2,7 +2,7 @@
 -- Descripción: Inserta una nueva unidad para los medicamentos
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_create_medication_unit
+CREATE PROCEDURE dbo.sp_add_medication_unit_health
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @UNIT_NAME VARCHAR(50),
@@ -15,11 +15,11 @@ BEGIN
     
     -- Normalizar y formatear el nombre de la unidad
     DECLARE @NormalizedUnitName VARCHAR(50);
-    SET @NormalizedUnitName = dbo.normalizeAndFormatText(@UNIT_NAME);
+    SET @NormalizedUnitName = dbo.fn_normalize_format_text(@UNIT_NAME);
 
     -- Normalizar y formatear la abreviación
     DECLARE @NormalizedAbbreviation VARCHAR(25);
-    SET @NormalizedAbbreviation = dbo.normalizeAndFormatDownText(@ABBREVIATION);
+    SET @NormalizedAbbreviation = dbo.fn_normalize_format_down_text(@ABBREVIATION);
 
     -- Validación de parámetros
     IF @IDE_COMPANY IS NULL OR @NormalizedUnitName IS NULL OR @NormalizedAbbreviation IS NULL
@@ -70,7 +70,7 @@ GO
 -- Declarar una variable para el id que retorna
 DECLARE @NewUnitID UNIQUEIDENTIFIER;
 
-EXEC dbo.sp_create_medication_unit 
+EXEC dbo.sp_add_medication_unit_health 
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @UNIT_NAME =  'Test-02',
     @ABBREVIATION = 'ABRE',
@@ -78,7 +78,7 @@ EXEC dbo.sp_create_medication_unit
 
 SELECT  @NewUnitID AS NewUnit;
 ------------------------------------
-EXEC dbo.sp_create_medication_unit 
+EXEC dbo.sp_add_medication_unit_health 
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @UNIT_NAME =  'Test-02',
     @ABBREVIATION = 'ABRE2' ;
@@ -87,7 +87,7 @@ SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_UNITS WHERE IDE_UNIT = '1bfa4032-e8f8-4e
 -- ======================================================================================================= --
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_create_medication_unit;
+DROP PROCEDURE IF EXISTS dbo.sp_add_medication_unit_health;
 -- ======================================================================================================= --
 
 
@@ -99,7 +99,7 @@ DROP PROCEDURE IF EXISTS dbo.sp_create_medication_unit;
 -- Descripción: Actualiza una unidad de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_update_medication_unit
+CREATE PROCEDURE dbo.sp_update_medication_unit_health
 (
     @IDE_UNIT UNIQUEIDENTIFIER,
     @UNIT_NAME VARCHAR(50),
@@ -111,11 +111,11 @@ BEGIN
 
     -- Normalizar y formatear el nombre de la unidad
     DECLARE @NormalizedUnitName VARCHAR(50);
-    SET @NormalizedUnitName = dbo.normalizeAndFormatText(@UNIT_NAME);
+    SET @NormalizedUnitName = dbo.fn_normalize_format_text(@UNIT_NAME);
     
     -- Normalizar y formatear la abreviación
     DECLARE @NormalizedAbbreviation VARCHAR(25);
-    SET @NormalizedAbbreviation = dbo.normalizeAndFormatDownText(@ABBREVIATION);
+    SET @NormalizedAbbreviation = dbo.fn_normalize_format_down_text(@ABBREVIATION);
 
     -- Validación de parámetros
     IF @IDE_UNIT IS NULL OR @NormalizedUnitName IS NULL OR @NormalizedAbbreviation IS NULL
@@ -169,13 +169,13 @@ GO
 
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_update_medication_unit;
+DROP PROCEDURE IF EXISTS dbo.sp_update_medication_unit_health;
 -- ======================================================================================================= --
 -- ==================================== READ THE DOSAGE ================================================ --
 SELECT * FROM  T_RRHH_OCUPATIONAL_HEALTH_UNITS WHERE IDE_UNIT = '1bfa4032-e8f8-4e83-84ca-8214bb414257';
 -- ======================================================================================================= --
 -- ======================================== CALL PROCEDURE =============================================== --
-EXEC dbo.sp_update_medication_unit 
+EXEC dbo.sp_update_medication_unit_health 
     @IDE_UNIT =  '1bfa4032-e8f8-4e83-84ca-8214bb414257',
     @UNIT_NAME = 'TEST001', 
     @ABBREVIATION = 'TEST 11.1.11';
@@ -189,7 +189,7 @@ EXEC dbo.sp_update_medication_unit
 -- Descripción: Elimina una DOSIS de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_delete_medication_unit 
+CREATE PROCEDURE dbo.sp_delete_medication_unit_health 
 (
     @IDE_UNIT UNIQUEIDENTIFIER
 )
@@ -230,11 +230,11 @@ END;
 GO
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_delete_occupational_health_unit;
+DROP PROCEDURE IF EXISTS dbo.sp_delete_medication_unit_health;
 -- ======================================================================================================= --
 
 -- ======================================== CALL PROCEDURE =============================================== --
-EXEC dbo.sp_delete_medication_unit 
+EXEC dbo.sp_delete_medication_unit_health 
     @IDE_UNIT = '480f4527-389c-493e-9688-0231b919d100';
 -- ======================================================================================================= --
 

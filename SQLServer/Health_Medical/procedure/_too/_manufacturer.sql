@@ -2,7 +2,7 @@
 -- Descripción: Inserta un nuevo fabricante para los medicamentos
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_create_medication_manufacturer
+CREATE PROCEDURE dbo.sp_add_medication_manufacturer_health
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @MANUFACTURER_NAME VARCHAR(50),
@@ -14,7 +14,7 @@ BEGIN
 
     -- Normalizar y formatear el nombre del fabricante
     DECLARE @NormalizedManufacturerName VARCHAR(50);
-    SET @NormalizedManufacturerName = dbo.normalizeAndFormatText(@MANUFACTURER_NAME);
+    SET @NormalizedManufacturerName = dbo.fn_normalize_format_text(@MANUFACTURER_NAME);
 
     -- Validar que los parámetros sean válidos
     IF @IDE_COMPANY IS NULL OR @NormalizedManufacturerName IS NULL
@@ -66,7 +66,7 @@ GO
 -- Declarar una variable para capturar el ID 
 DECLARE @NewManufacturerID UNIQUEIDENTIFIER;
 -- Llamar al procedimiento almacenado
-EXEC dbo.sp_create_medication_manufacturer
+EXEC dbo.sp_add_medication_manufacturer_health
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @MANUFACTURER_NAME = 'Test 001',
     @NewManufacturerID = @NewManufacturerID OUTPUT;
@@ -75,7 +75,7 @@ SELECT @NewManufacturerID AS NewManufacturerID;
 
 ------------------------------------
 -- Ejecutar otra inserción
-EXEC dbo.sp_create_medication_manufacturer
+EXEC dbo.sp_add_medication_manufacturer_health
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @MANUFACTURER_NAME = 'Test 02';
 
@@ -84,7 +84,7 @@ EXEC dbo.sp_create_medication_manufacturer
 SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_MANUFACTURERS WHERE IDE_MANUFACTURER = 'efa7e671-1f5b-4a51-9069-9428f669052a';
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_create_medication_manufacturer;
+DROP PROCEDURE IF EXISTS dbo.sp_add_medication_manufacturer_health;
 -- ======================================================================================================= --
 
 
@@ -100,7 +100,7 @@ DROP PROCEDURE IF EXISTS dbo.sp_create_medication_manufacturer;
 -- Descripción: Actualiza un manufacute de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_update_medication_manufacturer
+CREATE PROCEDURE dbo.sp_update_medication_manufacturer_health
 (
     @IDE_MANUFACTURER UNIQUEIDENTIFIER,
     @MANUFACTURER_NAME VARCHAR(50)
@@ -111,7 +111,7 @@ BEGIN
 
     -- Normalizar y formatear el nombre del fabricante
     DECLARE @NormalizedManufacturerName VARCHAR(50);
-    SET @NormalizedManufacturerName = dbo.normalizeAndFormatText(@MANUFACTURER_NAME);
+    SET @NormalizedManufacturerName = dbo.fn_normalize_format_text(@MANUFACTURER_NAME);
 
     -- Validar los parámetros
     IF @IDE_MANUFACTURER IS NULL OR @NormalizedManufacturerName IS NULL
@@ -160,13 +160,13 @@ BEGIN
 END;
 GO
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_update_medication_manufacturer;
+DROP PROCEDURE IF EXISTS dbo.sp_update_medication_manufacturer_health;
 -- ======================================================================================================= --
 -- ==================================== READ THE DOSAGE ================================================ --
 SELECT * FROM  T_RRHH_OCUPATIONAL_HEALTH_MANUFACTURERS WHERE IDE_MANUFACTURER = 'efa7e671-1f5b-4a51-9069-9428f669052a';
 -- ======================================================================================================= --
 -- ======================================== CALL PROCEDURE =============================================== --
-EXEC dbo.sp_update_medication_manufacturer
+EXEC dbo.sp_update_medication_manufacturer_health
      @IDE_MANUFACTURER = 'efa7e671-1f5b-4a51-9069-9428f669052a',
      @MANUFACTURER_NAME = 'Nuevo Nombre del Fabricante';
 -- ======================================================================================================= --
@@ -181,7 +181,7 @@ EXEC dbo.sp_update_medication_manufacturer
 -- Descripción: Elimina una manufacture de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_delete_medication_manufacturer
+CREATE PROCEDURE dbo.sp_delete_medication_manufacturer_health
 (
     @IDE_MANUFACTURER UNIQUEIDENTIFIER
 )
@@ -226,13 +226,13 @@ BEGIN
 END;
 GO
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_delete_medication_manufacturer;
+DROP PROCEDURE IF EXISTS dbo.sp_delete_medication_manufacturer_health;
 -- ======================================================================================================= --
 
 
    -- ======================================== CALL PROCEDURE =============================================== --
 
-EXEC dbo.sp_delete_medication_manufacturer
+EXEC dbo.sp_delete_medication_manufacturer_health
     @IDE_MANUFACTURER = '89de6053-b6fd-4c47-b72d-2c7625d974ae';
 -- ======================================================================================================= --
 

@@ -2,7 +2,7 @@
 -- Descripción: Inserta una nueva ruta de administración para los medicamentos
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_create_medication_route
+CREATE PROCEDURE dbo.sp_add_medication_route_health
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @ROUTE_NAME VARCHAR(50),
@@ -14,7 +14,7 @@ BEGIN
 
     -- Normalizar y formatear el nombre de la ruta
     DECLARE @NormalizedRouteName VARCHAR(50);
-    SET @NormalizedRouteName = dbo.normalizeAndFormatText(@ROUTE_NAME);
+    SET @NormalizedRouteName = dbo.fn_normalize_format_text(@ROUTE_NAME);
 
     -- Validar que ambos parámetros no sean NULL
     IF @NormalizedRouteName IS NULL OR @IDE_COMPANY IS NULL
@@ -66,7 +66,7 @@ GO
 -- Declarar una variable para capturar el ID de la dosis
 DECLARE @NewRouteID UNIQUEIDENTIFIER;
 -- Llamar al procedimiento almacenado
-EXEC dbo.sp_create_medication_route
+EXEC dbo.sp_add_medication_route_health
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16',
     @ROUTE_NAME = 'Tes01',
     @NewRouteID = @NewRouteID OUTPUT ;
@@ -74,7 +74,7 @@ EXEC dbo.sp_create_medication_route
 SELECT @NewRouteID AS NewRouteID;
 
 ------------------------------------
-EXEC dbo.sp_create_medication_route
+EXEC dbo.sp_add_medication_route_health
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16',
     @ROUTE_NAME = 'OOO01';
 -- ==================================== READ THE DOSOAGE ================================================ --
@@ -82,7 +82,7 @@ SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_ADMINISTRATION_ROUTES WHERE IDE_ROUTE = 
 -- ======================================================================================================= --
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_create_medication_route;
+DROP PROCEDURE IF EXISTS dbo.sp_add_medication_route_health;
 -- ======================================================================================================= --
 
 
@@ -95,7 +95,7 @@ DROP PROCEDURE IF EXISTS dbo.sp_create_medication_route;
 -- Descripción: Actualiza un nombre de ruta de administración para medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_update_medication_route
+CREATE PROCEDURE dbo.sp_update_medication_route_health
 (
     @IDE_ROUTE UNIQUEIDENTIFIER,
     @ROUTE_NAME VARCHAR(50)
@@ -106,7 +106,7 @@ BEGIN
 
     -- Normalizar y formatear el nombre de la ruta
     DECLARE @NormalizedRouteName VARCHAR(50);
-    SET @NormalizedRouteName = dbo.normalizeAndFormatText(@ROUTE_NAME);
+    SET @NormalizedRouteName = dbo.fn_normalize_format_text(@ROUTE_NAME);
 
     -- Validar los parámetros
     IF @IDE_ROUTE IS NULL OR @NormalizedRouteName IS NULL
@@ -176,7 +176,7 @@ EXEC dbo.sp_update_medication_route
 -- Descripción: Elimina una ruta de administración de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_delete_medication_route
+CREATE PROCEDURE dbo.sp_delete_medication_route_health
 (
     @IDE_ROUTE UNIQUEIDENTIFIER
 )
@@ -224,10 +224,10 @@ GO
 
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_delete_medication_route;
+DROP PROCEDURE IF EXISTS dbo.sp_delete_medication_route_health;
 -- ======================================================================================================= --
 
 -- ======================================== CALL PROCEDURE =============================================== --
-EXEC dbo.sp_delete_medication_route
+EXEC dbo.sp_delete_medication_route_health
 @IDE_ROUTE = '23ee55d6-59ba-4e47-b6de-cdd3767aafe4';
 -- ======================================================================================================= --

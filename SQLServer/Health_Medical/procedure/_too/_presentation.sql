@@ -2,7 +2,7 @@
 -- Descripción: Inserta una nueva PRESENTACION para los medicamentos
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp__create_medication_presentation
+CREATE PROCEDURE dbo.sp_add_medication_presentation_health
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @PRESENTATION_NAME VARCHAR(50),
@@ -15,7 +15,7 @@ BEGIN
     
     -- Normalizar y formatear el nombre de la presentación
     DECLARE @NormalizedPresentationName VARCHAR(50);
-    SET @NormalizedPresentationName = dbo.normalizeAndFormatText(@PRESENTATION_NAME);
+    SET @NormalizedPresentationName = dbo.fn_normalize_format_text(@PRESENTATION_NAME);
     
     -- Validar que los parámetros sean válidos
     IF @IDE_COMPANY IS NULL OR @NormalizedPresentationName IS NULL
@@ -64,14 +64,14 @@ GO
 ------------------------------------
 GO
 DECLARE @NewPresentationID UNIQUEIDENTIFIER;
-EXEC dbo.sp__create_medication_presentation
+EXEC dbo.sp_add_medication_presentation_health
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @PRESENTATION_NAME = 'teste 111',
     @DESCRIPTION = 'LUIGI TEST',
     @NewPresentationID = @NewPresentationID OUTPUT;
 SELECT @NewPresentationID AS NewPresentationId;
 ------------------------------------
-EXEC dbo.sp__create_medication_presentation
+EXEC dbo.sp_add_medication_presentation_health
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @PRESENTATION_NAME = 'teste 222',
     @DESCRIPTION = 'LUIGI TEST';
@@ -80,7 +80,7 @@ SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_PRESENTATIONS WHERE IDE_PRESENTATION = '
 -- ======================================================================================================= --
 
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp__create_medication_presentation ;
+DROP PROCEDURE IF EXISTS dbo.sp_add_medication_presentation_health ;
 -- ======================================================================================================= --
 
 
@@ -96,7 +96,7 @@ DROP PROCEDURE IF EXISTS dbo.sp__create_medication_presentation ;
 -- ================================================================================================================================= --
 
 GO
-CREATE PROCEDURE dbo.sp_update_medication_presentation
+CREATE PROCEDURE dbo.sp_update_medication_presentation_health
 (
     @IDE_PRESENTATION UNIQUEIDENTIFIER,
     @PRESENTATION_NAME VARCHAR(50),
@@ -108,7 +108,7 @@ BEGIN
 
     -- Normalizar y formatear el nombre de la presentación
     DECLARE @NormalizedPresentationName VARCHAR(50);
-    SET @NormalizedPresentationName = dbo.normalizeAndFormatText(@PRESENTATION_NAME);
+    SET @NormalizedPresentationName = dbo.fn_normalize_format_text(@PRESENTATION_NAME);
    
     -- Validar los parámetros
     IF @IDE_PRESENTATION IS NULL OR @NormalizedPresentationName IS NULL
@@ -157,7 +157,7 @@ BEGIN
 END;
 GO
 -- ======================================== CALL PROCEDURE =============================================== --
-EXEC dbo.sp_update_medication_presentation 
+EXEC dbo.sp_update_medication_presentation_health 
     @IDE_PRESENTATION = '4865c4ff-41cc-4b07-b86f-828922be9f5b',
     @PRESENTATION_NAME = 'TEST001', 
     @DESCRIPTION = 'TEST 11.1.11';
@@ -166,7 +166,7 @@ EXEC dbo.sp_update_medication_presentation
 SELECT * FROM  T_RRHH_OCUPATIONAL_HEALTH_PRESENTATIONS WHERE IDE_PRESENTATION = '4865c4ff-41cc-4b07-b86f-828922be9f5b';
 -- ======================================================================================================= --
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_update_medication_presentation;
+DROP PROCEDURE IF EXISTS dbo.sp_update_medication_presentation_health;
 -- ======================================================================================================= --
 
 -- ==================================================================================================== --
@@ -177,7 +177,7 @@ DROP PROCEDURE IF EXISTS dbo.sp_update_medication_presentation;
 -- Descripción: Elimina una Presentacion
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_delete_medication_presentation
+CREATE PROCEDURE dbo.sp_delete_medication_presentation_health
 (
     @IDE_PRESENTATION UNIQUEIDENTIFIER
 )

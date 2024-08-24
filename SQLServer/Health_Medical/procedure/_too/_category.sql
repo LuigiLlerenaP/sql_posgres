@@ -2,7 +2,7 @@
 -- Descripción: Inserta una nueva categoría de medicamentos 
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_create_medication_category
+CREATE PROCEDURE dbo.sp_add_medication_category_health
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @CATEGORY_NAME VARCHAR(150),
@@ -15,7 +15,7 @@ BEGIN
 
     -- Normalizar y formatear el nombre de la categoría
     DECLARE @NormalizedCategoryName VARCHAR(150);
-    SET @NormalizedCategoryName = dbo.normalizeAndFormatText(@CATEGORY_NAME);
+    SET @NormalizedCategoryName = dbo.fn_normalize_format_text(@CATEGORY_NAME);
 
     -- Validar que los parámetros sean válidos
     IF @IDE_COMPANY IS NULL 
@@ -62,7 +62,7 @@ BEGIN
 END;
 GO
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_create_medication_category;
+DROP PROCEDURE IF EXISTS dbo.sp_add_medication_category_health;
 -- ======================================================================================================= --
 
 -- ==================================== READ THE CATEGORY ================================================ --
@@ -79,7 +79,7 @@ GO
 DECLARE @NewCategoryID UNIQUEIDENTIFIER;
 
 -- Llamar al procedimiento almacenado
-EXEC dbo.sp_create_medication_category 
+EXEC dbo.sp_add_medication_category_health 
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @CATEGORY_NAME = 'Test 004', 
     @DESCRIPTION = 'LUIGI TEST ;',
@@ -89,7 +89,7 @@ EXEC dbo.sp_create_medication_category
 SELECT @NewCategoryID AS NewCategoryID;
 
 ------------------------------------
-EXEC dbo.sp_create_medication_category 
+EXEC dbo.sp_add_medication_category_health 
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @CATEGORY_NAME = 'Test 004', 
     @DESCRIPTION = 'LUIGI TEST';
@@ -102,7 +102,7 @@ EXEC dbo.sp_create_medication_category
 -- Descripción: Actualiza una categoría de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_update_medication_category
+CREATE PROCEDURE dbo.sp_update_medication_category_health
 (
     @IDE_CATEGORY UNIQUEIDENTIFIER,
     @CATEGORY_NAME VARCHAR(150),
@@ -114,7 +114,7 @@ BEGIN
 
     -- Normalizar y formatear el nombre de la categoría
     DECLARE @NormalizedCategoryName VARCHAR(150);
-    SET @NormalizedCategoryName = dbo.normalizeAndFormatText(@CATEGORY_NAME);
+    SET @NormalizedCategoryName = dbo.fn_normalize_format_text(@CATEGORY_NAME);
 
     -- Validar los parámetros
     IF @IDE_CATEGORY IS NULL 
@@ -165,7 +165,7 @@ BEGIN
 END;
 GO
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_update_medication_category;
+DROP PROCEDURE IF EXISTS dbo.usp_update_medication_category_health;
 -- ======================================================================================================= --
 -- ==================================== READ THE CATEGORY ================================================ --
 SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES WHERE IDE_CATEGORY = 'FE324EDE-CB70-45DD-AA67-92320796875B';
@@ -174,7 +174,7 @@ SELECT * FROM T_RRHH_OCUPATIONAL_HEALTH_MEDICATION_CATEGORIES WHERE IDE_CATEGORY
 
 ------------------------------------
 
-EXEC dbo.sp_update_medication_category 
+EXEC dbo.usp_update_medication_category_health 
     @IDE_CATEGORY = 'FE324EDE-CB70-45DD-AA67-92320796875B',
     @CATEGORY_NAME = 'TEST009', 
     @DESCRIPTION = 'TEST 11.1.1';
@@ -185,7 +185,7 @@ EXEC dbo.sp_update_medication_category
 -- Descripción: Elimina una categoría de medicamentos existente
 -- ================================================================================================================================= --
 GO
-CREATE PROCEDURE dbo.sp_delete_medication_category
+CREATE PROCEDURE dbo.sp_delete_medication_category_health
 (
     @IDE_CATEGORY UNIQUEIDENTIFIER
 )
@@ -228,10 +228,10 @@ BEGIN
 END;
 GO
 -- ======================================== DROP PROCEDURE =============================================== --
-DROP PROCEDURE IF EXISTS dbo.sp_delete_medication_category;
+DROP PROCEDURE IF EXISTS dbo.usp_delete_medication_category_health;
 -- ======================================================================================================= --
 
-EXEC dbo.sp_delete_medication_category   
+EXEC dbo.usp_delete_medication_category_health   
     @IDE_CATEGORY = '8ce6850b-5937-436c-b429-dfc3faeeeafc';
 
 
