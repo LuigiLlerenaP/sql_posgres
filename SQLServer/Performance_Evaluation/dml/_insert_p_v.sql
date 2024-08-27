@@ -27,18 +27,37 @@ VALUES
     ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 'c4224f43-b170-4557-9685-bab6bebb83bf', 'Deficiente', 'No alcanza los estándares mínimos requeridos, con deficiencias notables que afectan la productividad.', 1);
 
 
--- Insertar datos en la tabla T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS (Parent)
-INSERT INTO T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS (IDE_COMPANY, RECOMMENDATION_NAME)
-VALUES ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 'Recomendaciones para Evaluaciones de Desempeño Anual');
+-- Insertar datos en la tabla T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS (conjunto principal para prueba)
+INSERT INTO T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS (IDE_COMPANY, RECOMMENDATION_NAME, RECOMMENDATION_DESCRIPTION)
+VALUES 
+    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
+     'Recomendaciones para Evaluaciones de Desempeño Anual',
+     'Descripción general para las recomendaciones de evaluaciones de desempeño anual.');
 
 -- Insertar recomendaciones para la Evaluación Anual de Desempeño
-INSERT INTO T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS (IDE_COMPANY, PARENT_RECOMMENDATION_SET, RECOMMENDATION_NAME)
+INSERT INTO T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS (IDE_COMPANY, PARENT_RECOMMENDATION_SET, RECOMMENDATION_NAME, RECOMMENDATION_DESCRIPTION)
 VALUES 
-    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', '22fbec35-aaad-4855-9556-ababcd09fb70', 'La línea de supervisión directa debe evaluar el rendimiento del colaborador, los resultados entregados y la vivencia de los valores institucionales.'),
-    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', '22fbec35-aaad-4855-9556-ababcd09fb70', 'Evite calificar basado en rumores o reputación. Evalúe a la persona basándose en su experiencia real con ella. Las observaciones deben estar fundamentadas en hechos y no en apreciaciones personales o prejuicios.'),
-    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', '22fbec35-aaad-4855-9556-ababcd09fb70', 'Proporcione retroalimentación clara y honesta para que los empleados comprendan su impacto en los resultados y en las demás personas.'),
-    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', '22fbec35-aaad-4855-9556-ababcd09fb70', 'Enfóquese en los resultados y comportamientos observados en la gestión del colaborador, evitando asumir motivos o intenciones.'),
-    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', '22fbec35-aaad-4855-9556-ababcd09fb70', 'Recuerde que los empleados valoran conocer tanto sus fortalezas como las áreas en las que pueden mejorar.');
+    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
+     '22fbec35-aaad-4855-9556-ababcd09fb70', 
+     'Línea de Supervisión Directa', 
+     'La línea de supervisión directa debe evaluar el rendimiento del colaborador, los resultados entregados y la vivencia de los valores institucionales.'),
+    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
+     '22fbec35-aaad-4855-9556-ababcd09fb70', 
+     'Evaluación Basada en Hechos', 
+     'Evite calificar basado en rumores o reputación. Evalúe a la persona basándose en su experiencia real con ella. Las observaciones deben estar fundamentadas en hechos y no en apreciaciones personales o prejuicios.'),
+    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
+     '22fbec35-aaad-4855-9556-ababcd09fb70', 
+     'Retroalimentación Clara', 
+     'Proporcione retroalimentación clara y honesta para que los empleados comprendan su impacto en los resultados y en las demás personas.'),
+    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
+     '22fbec35-aaad-4855-9556-ababcd09fb70', 
+     'Enfoque en Resultados', 
+     'Enfóquese en los resultados y comportamientos observados en la gestión del colaborador, evitando asumir motivos o intenciones.'),
+    ('5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
+     '22fbec35-aaad-4855-9556-ababcd09fb70', 
+     'Fortalezas y Áreas de Mejora', 
+     'Recuerde que los empleados valoran conocer tanto sus fortalezas como las áreas en las que pueden mejorar.');
+
 
 --nsertar datos en la tabla T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS (Parent)
 INSERT INTO T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS (IDE_COMPANY, RECOMMENDATION_NAME)
