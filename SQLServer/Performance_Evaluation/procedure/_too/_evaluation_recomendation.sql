@@ -146,6 +146,17 @@ BEGIN
         RETURN;
     END;
 
+    -- Verificar duplicados
+    IF EXISTS (
+        SELECT 1 
+        FROM T_RRHH_PERFORMANCE_EVALUATIONS_RECOMMENDATIONS
+        WHERE IDE_COMPANY = @IDE_COMPANY 
+          AND RECOMMENDATION_NAME = @RECOMMENDATION_NAME
+    )
+    BEGIN
+        RAISERROR('Ya existe un conjunto de recomendaciones con este nombre.', 16, 1);
+        RETURN;
+    END;
     -- Verificar existencia del conjunto de recomendaciones
     IF NOT EXISTS (
         SELECT 1 
@@ -157,6 +168,7 @@ BEGIN
         RAISERROR('El conjunto de recomendaciones que intenta actualizar no existe.', 16, 1);
         RETURN;
     END;
+    
 
     -- Iniciar transacción
     BEGIN TRANSACTION;
@@ -259,7 +271,7 @@ DROP PROCEDURE IF EXISTS dbo.sp_add_child_recomendation_set_evaluation;
 -- Descripción:   Agregar una recomendacion hijo en base a su padre 
 -- ====================================================================================================
 GO
-CREATE PROCEDURE dbo.sp_add_child_recommendation_set_evaluation
+CREATE PROCEDURE dbo.sp_add_child_recomendation_set_evaluation
 (
     @IDE_COMPANY UNIQUEIDENTIFIER,
     @PARENT_RECOMMENDATION_SET UNIQUEIDENTIFIER,
@@ -341,7 +353,7 @@ GO
 DECLARE @NewRecommendationChildSetID UNIQUEIDENTIFIER;
 
 -- Llamada al procedimiento almacenado
-EXEC dbo.sp_add_child_recommendation_set_evaluation
+EXEC dbo.sp_add_child_recomendation_set_evaluation
     @IDE_COMPANY = '5b4234e3-5850-4c53-92c6-7dc3d9ce0e16', 
     @PARENT_RECOMMENDATION_SET = '6b09ef7a-91cb-46c3-baf4-f346ba8a5e56', 
     @RECOMMENDATION_NAME = 'Recomendación Hija Test',  
