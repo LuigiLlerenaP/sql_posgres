@@ -1,7 +1,0 @@
---!SubQuery
--- //
---*
-SELECT
-    *
-FROM
-    users;

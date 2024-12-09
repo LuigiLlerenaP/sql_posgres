@@ -28,8 +28,8 @@ VALUES
     ('Gonzalo', 'Silva'),
     ('Fernando', 'Garcia');
 
--- UPDATE RECORDS
--- If I don't put the WHERE clause, I modify all records.
+--! UPDATE RECORDS
+--// If I don't put the WHERE clause, I modify all records.
 UPDATE
     USERS_CAR
 SET
@@ -38,7 +38,8 @@ SET
 WHERE
     USER_ID = 5;
 
--- SEE  RECORDS WITHE LIMIT 4 OFFSET 1
+-- !SEE  RECORDS WITHE LIMIT 4 OFFSET 1
+--* Muestra registros con un límite de 4 y un desplazamiento de 1
 SELECT
     *
 FROM
@@ -46,7 +47,8 @@ FROM
 LIMIT
     4 OFFSET 1;
 
--- WHERE
+-- !WHERE
+--* Filtra registros basados en condiciones específicas
 SELECT
     *
 FROM
@@ -54,7 +56,8 @@ FROM
 WHERE
     u.USER_ID = 3;
 
---LIKE: QUE COINCIDA CON EL CARÁCTER
+--! LIKE: QUE COINCIDA CON EL CARÁCTER
+--// Busca registros que coincidan con un patrón específico
 SELECT
     u.FIRSTNAME,
     u.LASTNAME
@@ -64,9 +67,9 @@ WHERE
     u.FIRSTNAME LIKE '%ohn'
     AND u.LASTNAME LIKE '_oe';
 
--- DELETE REGISTERS
--- PRIMERO BUSQUEMOS QUE ELIMINAR
--- SI NO USAMOS UN WHERE SE ELIMINARA TODO
+-- !DELETE RECORDS
+--// Elimina registros de la tabla
+--* Primero, buscamos qué registros eliminar
 SELECT
     *
 FROM
@@ -79,8 +82,22 @@ DELETE FROM
 WHERE
     USER_ID = 3;
 
--- DROP TABLE
+--! DROP TABLE
+--// Elimina toda la estructura de la tabla junto con sus datos
 DROP TABLE USERS_CAR;
 
--- TRUNCATES
+-- !TRUNCATE TABLE
+--// Elimina todos los registros de la tabla, pero mantiene la estructura
 TRUNCATE TABLE USER_CARS;
+
+--!  Eliminar una fila de la tabla
+--* La cláusula DELETE se utiliza para eliminar filas de una tabla.
+--* En este ejemplo, eliminamos la fila donde 'code' es 'NLD' y 'code2' es 'NA'.
+DELETE FROM
+    country
+WHERE
+    code = 'NLD'
+    AND code2 = 'NA';
+
+--!Alterar secuencia
+ALTER SEQUENCE 'seq name' RESTART WITH 8;
