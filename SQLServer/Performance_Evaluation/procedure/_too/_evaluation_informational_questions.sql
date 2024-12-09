@@ -11,6 +11,7 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Validación de entrada
+    
     IF @IDE_COMPANY IS NULL
     BEGIN
         RAISERROR('El ID de la compañía no puede ser NULL.', 16, 1);

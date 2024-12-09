@@ -68,9 +68,11 @@ BEGIN
         ROLLBACK TRANSACTION;
 
         -- Obtener y mostrar el mensaje de error
+
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH;
+
 END;
 GO
 
@@ -89,6 +91,7 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Validación de entrada
+    
     IF @IDE_CATEGORY IS NULL
     BEGIN
         RAISERROR('El ID de la categoría no puede ser NULL.', 16, 1);
